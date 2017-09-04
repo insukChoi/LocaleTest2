@@ -1,0 +1,120 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<HTML>
+<HEAD>
+<title>jQuery.i18n.properties: Demo</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta http-equiv="content-script-type" content="text/javascript" />
+<!-- JS -->
+<script type="text/javascript" src="js/jquery.min.js"></script>
+<script type="text/javascript" src="js/lib/jquery.i18n.properties-min.js"></script>
+<!-- CSS -->
+<link rel="stylesheet" href="css/blueprint/screen.css" type="text/css" media="screen, projection">
+<link rel="stylesheet" href="css/blueprint/print.css" type="text/css" media="print">
+<!--[if lt IE 8]><link rel="stylesheet" href="css/blueprint/ie.css" type="text/css" media="screen, projection"><![endif]-->
+<link rel="stylesheet" href="css/style.css" type="text/css" media="screen, projection">
+
+<script type="text/javascript">
+    (function($) {
+        $.fn.setTagValue = function(dat) {
+            var tag = $(this).get(0).tagName;
+            var type= $(this).attr("type");
+            switch (tag.toLowerCase()) {
+                case "textarea":
+                case "input":
+                    if (type=="radio"||type=="checkbox"&&!isNull(dat))	$(this).attr("checked", true);
+                    else 																	$(this).val(dat);
+                    break;
+                case "select":
+                    $(this).val(dat);
+                    break;
+                case "img" :
+                    if (!isNull(dat)) $(this).attr("src", dat);
+                    else if (isNull($(this).attr("src"))) $(this).remove();
+                    break;
+                case "table" :
+                    if (dat="") $(this).find("tr").remove();
+                    break;
+                default :
+                    $(this).html(dat);
+                    break;
+            };
+        };
+
+    })(jQuery);
+
+/*
+ * selector 안에 있는 모든 id 값에 프로퍼티값을 맵핑
+ */
+function setAll(selector, dat) {
+    $.each($(selector).find("[i18nCd]"),function() {
+        var o = $(this).attr("i18nCd");
+        if (isNull(o)) return true;
+        var d = dat(o);
+        if($(this).attr("i18nMsg")) d = eval($(this).attr("i18nCd"))($(this).attr("i18nMsg"));
+        if (d.indexOf("[") > -1) return true;
+        if (d!=undefined)  $(this).setTagValue(d);
+    });
+    return this;
+}
+
+/*
+ * Language 변경
+ */
+function changeLang(lang) {
+    jQuery.i18n.properties({
+        name: 'Messages',
+        path: '/msg/bundle/',
+        mode: 'both',
+        language: lang,
+        async: true,
+        callback: function () {
+            setAll("body", $.i18n.prop);
+        }
+    });
+}
+
+/*
+ * Null 인지 체크
+ */
+function isNull(dat) {
+    return dat==undefined||typeof(dat)==undefined||dat==null||(typeof(dat)=="string"&&$.trim(dat)=="");
+}
+
+
+jQuery(document).ready(function() {
+    // Default Language = en
+    changeLang('en');
+
+    // 다국어 언어 변경
+    $("#btnToKr, #btnToEn, #btnToJp, #btnToCn").click(function () {
+        changeLang($(this).attr('locale'));
+    });
+
+
+});
+
+
+</script>
+</HEAD>
+
+<BODY>
+<h2>jQuery.i18n.properties :: Demo</h2>
+<button id="btnToEn" locale="en" style="width: 120px" >영어로 변환</button>
+<button id="btnToKr" locale="kr" style="width: 120px" >한글로 변환</button>
+<button id="btnToJp" locale="jp" style="width: 120px" >일본어로 변환</button>
+<button id="btnToCn" locale="cn" style="width: 120px" >중국어로 변환</button>
+
+<h3>Text 샘플</h3>
+<div class="left">
+    <br/><br/>
+    <h4 i18nCd="name"></h4>
+    <h4 i18nCd="hobby"></h4>
+    <h4 i18nCd="gender"></h4>
+    <h4 i18nCd="locale"></h4>
+</div>
+<h3>동적 변수 샘플</h3>
+    <input type="text" value="비즈플레이" readonly >
+    <h4 i18nCd="greeting" i18nMsg="비즈플레이"></h4>
+
+</BODY>
+</HTML>
